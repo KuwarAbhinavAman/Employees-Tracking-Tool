@@ -14,6 +14,7 @@ import warnings
 import requests
 import smtplib
 from email.mime.text import MIMEText
+import io
 
 warnings.filterwarnings('ignore')
 
@@ -27,7 +28,6 @@ def init_db():
     conn = get_db_connection()
     c = conn.cursor()
     
-    # Create tables if they don't exist
     c.execute('''CREATE TABLE IF NOT EXISTS employees (
         emp_id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
@@ -96,7 +96,6 @@ def init_db():
         FOREIGN KEY(emp_id) REFERENCES employees(emp_id)
     )''')
     
-    # Check and add missing columns in employees table
     c.execute("PRAGMA table_info(employees)")
     columns = [col[1] for col in c.fetchall()]
     
@@ -112,7 +111,6 @@ def init_db():
         c.execute("ALTER TABLE employees ADD COLUMN hire_date TEXT")
         c.execute("UPDATE employees SET hire_date = '2023-01-01' WHERE hire_date IS NULL")
     
-    # Check and add emp_id column to expenses table if missing
     c.execute("PRAGMA table_info(expenses)")
     exp_columns = [col[1] for col in c.fetchall()]
     if 'emp_id' not in exp_columns:
@@ -148,7 +146,7 @@ def execute_query(query, params=None, return_last_id=False):
         
         if query.strip().upper().startswith("SELECT"):
             result = c.fetchall()
-            conn.close()  # Close here since no commit needed for SELECT
+            conn.close()
             return result
         else:
             conn.commit()
@@ -281,9 +279,9 @@ def get_grok_insights(user_data, prediction):
 
 # Function to notify admin via email about new leave request
 def notify_admin_leave_request(name, start_date, end_date, leave_type, reason):
-    sender = "Info@constructionmartai.com"
+    sender = "abhinavabby9@gmail.com"
     receiver = sender
-    password = "Construction@112233"
+    password = "Imthebestg@121"
     subject = "New Leave Request"
     body = f"New leave request from {name}: {leave_type} from {start_date} to {end_date}. Reason: {reason}"
 
@@ -427,7 +425,7 @@ if page == "Admin Panel":
         email = st.text_input("Email")
         password = st.text_input("Password", type="password")
         if st.button("Login"):
-            if email == "Info@constructionmartai.com" and password == "Construction@112233":
+            if email == "abhinavabby9@gmail.com" and password == "Imthebestg@121":
                 st.session_state.admin_logged_in = True
                 st.success("Logged in successfully!")
                 st.rerun()
@@ -487,6 +485,26 @@ if page == "Admin Panel":
                     "status": st.column_config.SelectboxColumn("Status", options=["Active", "Inactive"]),
                     "tenure": st.column_config.TextColumn("Tenure", disabled=True),
                 }, key="emp_data_editor")
+                
+                # Download buttons for Employees
+                csv = employees.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label="Download Employees as CSV",
+                    data=csv,
+                    file_name="employees.csv",
+                    mime="text/csv",
+                    key="download_employees_csv"
+                )
+                excel_buffer = io.BytesIO()
+                employees.to_excel(excel_buffer, index=False)
+                st.download_button(
+                    label="Download Employees as Excel",
+                    data=excel_buffer,
+                    file_name="employees.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    key="download_employees_excel"
+                )
+                
                 if st.button("Update Employees", key="update_employees"):
                     for index, row in edited_df.iterrows():
                         hire_date_str = row['hire_date'].strftime('%Y-%m-%d') if pd.notna(row['hire_date']) else '2023-01-01'
@@ -494,7 +512,6 @@ if page == "Admin Panel":
                             "UPDATE employees SET name = ?, role = ?, department = ?, salary = ?, expected_login = ?, expected_logout = ?, hire_date = ?, status = ? WHERE emp_id = ?",
                             (row['name'], row['role'], row['department'], row['salary'], row['expected_login'], row['expected_logout'], hire_date_str, row['status'], row['emp_id'])
                         )
-                        # Update or add salary to expenses if employee is active
                         if row['status'] == 'Active':
                             current_month = datetime.now().replace(day=1).strftime('%Y-%m-%d')
                             existing_expense = fetch_data("SELECT exp_id, amount FROM expenses WHERE category = 'Salary' AND month = ? AND emp_id = ?", (current_month, row['emp_id']))
@@ -562,6 +579,26 @@ if page == "Admin Panel":
                     "break_duration": st.column_config.NumberColumn("Break Duration"),
                     "notes": st.column_config.TextColumn("Notes"),
                 }, key="att_data_editor")
+                
+                # Download buttons for Attendance
+                csv = attendance.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label="Download Attendance as CSV",
+                    data=csv,
+                    file_name="attendance.csv",
+                    mime="text/csv",
+                    key="download_attendance_csv"
+                )
+                excel_buffer = io.BytesIO()
+                attendance.to_excel(excel_buffer, index=False)
+                st.download_button(
+                    label="Download Attendance as Excel",
+                    data=excel_buffer,
+                    file_name="attendance.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    key="download_attendance_excel"
+                )
+                
                 if st.button("Update Attendance", key="update_attendance"):
                     for index, row in edited_df.iterrows():
                         execute_query(
@@ -620,6 +657,26 @@ if page == "Admin Panel":
                     "status": st.column_config.SelectboxColumn("Status", options=["Pending", "In Progress", "Completed On-Time", "Completed Late", "Cancelled"]),
                     "priority": st.column_config.SelectboxColumn("Priority", options=["Low", "Medium", "High"]),
                 }, key="task_data_editor")
+                
+                # Download buttons for Tasks
+                csv = tasks.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label="Download Tasks as CSV",
+                    data=csv,
+                    file_name="tasks.csv",
+                    mime="text/csv",
+                    key="download_tasks_csv"
+                )
+                excel_buffer = io.BytesIO()
+                tasks.to_excel(excel_buffer, index=False)
+                st.download_button(
+                    label="Download Tasks as Excel",
+                    data=excel_buffer,
+                    file_name="tasks.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    key="download_tasks_excel"
+                )
+                
                 if st.button("Update Tasks", key="update_tasks"):
                     for index, row in edited_df.iterrows():
                         execute_query(
@@ -669,6 +726,26 @@ if page == "Admin Panel":
                     "emp_id": st.column_config.NumberColumn("Employee ID"),
                     "name": st.column_config.TextColumn("Employee Name", disabled=True),
                 }, key="exp_data_editor")
+                
+                # Download buttons for Expenses
+                csv = expenses.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label="Download Expenses as CSV",
+                    data=csv,
+                    file_name="expenses.csv",
+                    mime="text/csv",
+                    key="download_expenses_csv"
+                )
+                excel_buffer = io.BytesIO()
+                expenses.to_excel(excel_buffer, index=False)
+                st.download_button(
+                    label="Download Expenses as Excel",
+                    data=excel_buffer,
+                    file_name="expenses.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    key="download_expenses_excel"
+                )
+                
                 if st.button("Update Expenses", key="update_expenses"):
                     for index, row in edited_df.iterrows():
                         execute_query(
@@ -715,6 +792,26 @@ if page == "Admin Panel":
                     "month": st.column_config.DateColumn("Month"),
                     "description": st.column_config.TextColumn("Description"),
                 }, key="rev_data_editor")
+                
+                # Download buttons for Revenues
+                csv = revenues.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label="Download Revenues as CSV",
+                    data=csv,
+                    file_name="revenues.csv",
+                    mime="text/csv",
+                    key="download_revenues_csv"
+                )
+                excel_buffer = io.BytesIO()
+                revenues.to_excel(excel_buffer, index=False)
+                st.download_button(
+                    label="Download Revenues as Excel",
+                    data=excel_buffer,
+                    file_name="revenues.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    key="download_revenues_excel"
+                )
+                
                 if st.button("Update Revenues", key="update_revenues"):
                     for index, row in edited_df.iterrows():
                         execute_query(
@@ -743,6 +840,25 @@ if page == "Admin Panel":
                         (action, leave_id)
                     )
                     st.success(f"Leave request {action}!")
+                
+                # Download buttons for Pending Leaves
+                csv = pending_leaves.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label="Download Pending Leaves as CSV",
+                    data=csv,
+                    file_name="pending_leaves.csv",
+                    mime="text/csv",
+                    key="download_pending_leaves_csv"
+                )
+                excel_buffer = io.BytesIO()
+                pending_leaves.to_excel(excel_buffer, index=False)
+                st.download_button(
+                    label="Download Pending Leaves as Excel",
+                    data=excel_buffer,
+                    file_name="pending_leaves.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    key="download_pending_leaves_excel"
+                )
             else:
                 st.info("No pending leave requests.")
 
@@ -887,22 +1003,18 @@ elif page == "Payroll Calculation":
     employees = fetch_data("SELECT emp_id, name, department, salary FROM employees WHERE status = 'Active'")
     
     if not employees.empty:
-        # Calculate annual salary
         employees['annual_salary'] = employees['salary'] * 12
         
-        # Check if salaries for the selected month already exist in expenses
         existing_expenses = fetch_data(
             "SELECT emp_id, amount FROM expenses WHERE category = 'Salary' AND month = ?",
             (month_start,)
         )
         existing_emp_ids = set(existing_expenses['emp_id'].values) if not existing_expenses.empty else set()
         
-        # Add salaries to expenses if not already added
         for index, row in employees.iterrows():
             if row['emp_id'] not in existing_emp_ids:
                 add_salary_to_expenses(row['emp_id'], row['salary'], month_start, row['name'])
         
-        # Fetch salary expenses for the selected month
         payroll_df = fetch_data(
             "SELECT e.emp_id, e.name, e.department, e.salary AS monthly_salary, ex.amount AS expense_salary "
             "FROM employees e "
@@ -911,10 +1023,7 @@ elif page == "Payroll Calculation":
             (month_start,)
         )
         
-        # Ensure monthly_salary is filled; use salary from employees if expense_salary is null
         payroll_df['monthly_salary'] = payroll_df['expense_salary'].combine_first(payroll_df['monthly_salary'])
-        
-        # Calculate annual salary for display
         payroll_df['annual_salary'] = payroll_df['monthly_salary'] * 12
         
         total_payroll = payroll_df['monthly_salary'].sum() if not payroll_df.empty else 0
