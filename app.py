@@ -279,9 +279,9 @@ def get_grok_insights(user_data, prediction):
 
 # Function to notify admin via email about new leave request
 def notify_admin_leave_request(name, start_date, end_date, leave_type, reason):
-    sender = "abhinavabby9@gmail.com"
+    sender = "Info@constructionmartai.com"
     receiver = sender
-    password = "Imthebestg@121"
+    password = "Construction@112233"
     subject = "New Leave Request"
     body = f"New leave request from {name}: {leave_type} from {start_date} to {end_date}. Reason: {reason}"
 
@@ -425,7 +425,7 @@ if page == "Admin Panel":
         email = st.text_input("Email")
         password = st.text_input("Password", type="password")
         if st.button("Login"):
-            if email == "abhinavabby9@gmail.com" and password == "Imthebestg@121":
+            if email == "Info@constructionmartai.com" and password == "Construction@112233":
                 st.session_state.admin_logged_in = True
                 st.success("Logged in successfully!")
                 st.rerun()
